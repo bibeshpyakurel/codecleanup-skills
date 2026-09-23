@@ -1,0 +1,14 @@
+# Cleanup Codebase
+
+Agent skill that removes dead code, unused dependencies, debug leftovers, and repository cruft without changing behavior. For Claude, Codex, Grok, Cursor, and other Agent Skills hosts.
+
+Install: npx skills add bibeshpyakurel/codecleanup-skills --skill cleanup-codebase
+
+- [README](README.md): what a run may change, install paths, enterprise policy
+- [SKILL.md](.agents/skills/cleanup-codebase/SKILL.md): the procedure agents follow
+- [Aspects](.agents/skills/cleanup-codebase/references/aspects.md): classification of every cleanup type
+- [Detectors](.agents/skills/cleanup-codebase/references/detectors.md): commands per language, install rule
+- [Life checks](.agents/skills/cleanup-codebase/references/false-alive.md): when code that looks unused is still live
+- [Policy](.agents/skills/cleanup-codebase/references/policy.md): CLEANUP.md format
+- [Security](SECURITY.md): trust model
+- [Design notes](docs/landscape.md): prior skills, detectors, and the agent checks
