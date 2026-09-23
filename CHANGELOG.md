@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.1
+
+- A `console.log` that reports progress stays. Only a debug marker (`console.debug`, `debugger`, `dbg!`, a log whose message says debug, and the same family in Python and Ruby) is a proven delete.
+- Comment lines that start with ordinary words such as "private" or "let" are no longer commented-out-code candidates.
+- Inventory finds manifests nested below the repository root, so a backend or frontend package is not invisible.
+
 ## 1.0.0
 
 First public release.

@@ -8,7 +8,8 @@ Each finding gets one class. The class decides whether the current mode may edit
 | Commented-out code | proven | The comment is source text, not a constraint | Delete the comment |
 | Narrating comment | proven | It restates the next line, or narrates the edit ("added", "removed", "now handles") | Delete the comment |
 | Backup or scratch file | proven | Name ends in `.bak`, `.old`, `.orig`, `~`, or `.tmp`, and nothing reads it | Delete the file |
-| Debug statement | proven | `console.log`, `console.debug`, `debugger`, `dbg!`, `pdb.set_trace`, `breakpoint()`, `binding.pry`, or `byebug`, and it is not the project's logger | Delete that statement |
+| Debug statement | proven | `debugger`, `dbg!`, `console.debug`, `pdb.set_trace`, `breakpoint()`, `binding.pry`, `byebug`, or a `console.log` whose message is a debug marker. The inventory signal `debug_leftovers` is this set | Delete that statement |
+| Program log | judgment | `console.log` or a print used as operator output: server started, rows imported, migration applied. The inventory signal `console_log_calls` is this set, including lines already in `debug_leftovers` | Leave it. Deleting it changes what the program reports |
 | Unused direct dependency | proven | Detector and search agree | Remove that declaration only |
 | Unused import, local, or unreachable branch | mechanical | The project's linter or compiler reports it | Autofix, except a re-export |
 | Unused suppression | mechanical | The linter reports an unused `eslint-disable`, `noqa`, `nolint`, or equivalent | Remove the suppression |

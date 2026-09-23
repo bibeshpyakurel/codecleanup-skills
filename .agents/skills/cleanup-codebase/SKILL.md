@@ -5,7 +5,7 @@ license: MIT
 compatibility: Any agent that reads Agent Skills. Requires a shell. Uses tools already installed in the repository. The inventory script has no extra dependencies and does not use the network.
 metadata:
   author: Bibesh Pyakurel
-  version: "1.0.0"
+  version: "1.0.1"
   short-description: Behavior-preserving codebase cleanup
 when-to-use: "clean up the codebase, tidy, deslop, prune dead code, remove unused dependencies, sweep technical debt, AI slop, repo hygiene, Claude, Codex, Grok, Cursor"
 argument-hint: "[path]"

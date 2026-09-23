@@ -18,8 +18,10 @@ cd "$root" || exit 1
 root=$(pwd)
 
 # Patterns are assembled so this file does not match its own report.
-debug_pattern="$(printf '%s%s%s' 'console\.(log|debug)\(|' 'debu' 'gger|dbg!|pdb\.set_trace|breakpoint\(|binding\.pry|byebug')"
-comment_pattern='^[[:space:]]*(//|#)[[:space:]]*(function|def|class|const|let|var|public|private|fn|func|export)([[:space:]]|$)'
+# debug_leftovers is the proven set. console_log_calls are operator output and stay judgment.
+debug_pattern="$(printf '%s%s%s' 'console\.debug\(|console\.log\([^[:cntrl:]]*[Dd]ebug|' 'debu' 'gger|dbg!|pdb\.set_trace|breakpoint\(|binding\.pry|byebug')"
+console_pattern='console\.log\('
+comment_pattern='^[[:space:]]*(//|#)[[:space:]]*(function[[:space:]]+[A-Za-z_]|def[[:space:]]+[A-Za-z_]|class[[:space:]]+[A-Za-z_]|fn[[:space:]]+[A-Za-z_]|func[[:space:]]+[A-Za-z_])'
 todo_pattern='TODO|FIXME|HACK|XXX'
 
 echo "# cleanup inventory"
@@ -88,37 +90,45 @@ else
   echo "git: none"
 fi
 
+manifest_files0() {
+  find . \
+    \( $(skip_tree) \) -prune -o -type f \
+    \( -name package.json -o -name pnpm-workspace.yaml -o -name go.mod -o -name go.work \
+       -o -name Cargo.toml -o -name pyproject.toml -o -name setup.cfg -o -name requirements.txt \
+       -o -name Pipfile -o -name Gemfile -o -name composer.json -o -name pom.xml \
+       -o -name build.gradle -o -name build.gradle.kts -o -name mix.exs \
+       -o -name Package.swift -o -name pubspec.yaml -o -name CMakeLists.txt \
+       -o -name '*.csproj' -o -name '*.sln' \) \
+    -print0
+}
+
+has_manifest() {
+  local name="$1"
+  find . \( $(skip_tree) \) -prune -o -type f -name "$name" -print -quit | grep -q .
+}
+
 section "manifests"
 found=0
-for manifest in \
-  package.json pnpm-workspace.yaml go.mod go.work Cargo.toml \
-  pyproject.toml setup.cfg requirements.txt Pipfile Gemfile \
-  composer.json pom.xml build.gradle build.gradle.kts mix.exs \
-  Package.swift pubspec.yaml CMakeLists.txt
-do
-  if [[ -f "$manifest" ]]; then
-    echo "- $manifest"
-    found=1
-  fi
-done
 while IFS= read -r -d '' manifest; do
   echo "- ${manifest#./}"
-  found=1
-done < <(find . \( -name node_modules -o -name .git -o -name dist -o -name build \) -prune -o -type f \( -name '*.csproj' -o -name '*.sln' \) -print0)
+  found=$((found + 1))
+  [[ $found -ge 40 ]] && break
+done < <(manifest_files0)
 [[ $found -eq 0 ]] && echo "- none"
+[[ $found -ge 40 ]] && echo "Stopped at 40 manifests."
 
 section "ecosystems"
 eco=0
-[[ -f package.json ]] && { echo "- javascript"; eco=1; }
-[[ -f pyproject.toml || -f requirements.txt || -f setup.cfg || -f Pipfile ]] && { echo "- python"; eco=1; }
-[[ -f go.mod ]] && { echo "- go"; eco=1; }
-[[ -f Cargo.toml ]] && { echo "- rust"; eco=1; }
-[[ -f pom.xml || -f build.gradle || -f build.gradle.kts ]] && { echo "- jvm"; eco=1; }
-[[ -f Gemfile ]] && { echo "- ruby"; eco=1; }
-[[ -f composer.json ]] && { echo "- php"; eco=1; }
-[[ -f mix.exs ]] && { echo "- elixir"; eco=1; }
-[[ -f Package.swift ]] && { echo "- swift"; eco=1; }
-if find . \( -name node_modules -o -name .git \) -prune -o -type f \( -name '*.csproj' -o -name '*.sln' \) -print -quit | grep -q .; then
+has_manifest package.json && { echo "- javascript"; eco=1; }
+{ has_manifest pyproject.toml || has_manifest requirements.txt || has_manifest setup.cfg || has_manifest Pipfile; } && { echo "- python"; eco=1; }
+has_manifest go.mod && { echo "- go"; eco=1; }
+has_manifest Cargo.toml && { echo "- rust"; eco=1; }
+{ has_manifest pom.xml || has_manifest build.gradle || has_manifest build.gradle.kts; } && { echo "- jvm"; eco=1; }
+has_manifest Gemfile && { echo "- ruby"; eco=1; }
+has_manifest composer.json && { echo "- php"; eco=1; }
+has_manifest mix.exs && { echo "- elixir"; eco=1; }
+has_manifest Package.swift && { echo "- swift"; eco=1; }
+if find . \( $(skip_tree) \) -prune -o -type f \( -name '*.csproj' -o -name '*.sln' \) -print -quit | grep -q .; then
   echo "- dotnet"
   eco=1
 fi
@@ -156,9 +166,11 @@ fi
 section "signals"
 todo_count=$(count_matching_lines "$todo_pattern")
 debug_count=$(count_matching_lines "$debug_pattern")
+console_count=$(count_matching_lines "$console_pattern")
 comment_count=$(count_matching_lines "$comment_pattern")
 echo "todo_fixme_hack_xxx: $todo_count"
 echo "debug_leftovers: $debug_count"
+echo "console_log_calls: $console_count"
 echo "commented_code_candidates: $comment_count"
 
 section "debug leftovers"
@@ -166,6 +178,13 @@ if [[ "$debug_count" -eq 0 ]]; then
   echo "- none"
 else
   sample_matches "$debug_pattern"
+fi
+
+section "console.log calls"
+if [[ "$console_count" -eq 0 ]]; then
+  echo "- none"
+else
+  sample_matches "$console_pattern"
 fi
 
 section "commented-out code candidates"

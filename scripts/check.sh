@@ -42,8 +42,8 @@ if name != "cleanup-codebase":
     raise SystemExit(f"name {name!r}")
 if not (1 <= len(desc) <= 500) or "\n" in desc:
     raise SystemExit(f"description length {len(desc)}")
-if 'version: "1.0.0"' not in front:
-    raise SystemExit("metadata.version is not 1.0.0")
+if 'version: "1.0.1"' not in front:
+    raise SystemExit("metadata.version is not 1.0.1")
 if len(text.splitlines()) > 500:
     raise SystemExit("SKILL.md exceeds 500 lines")
 body_lines = text[end + 5 :].count("\n") + 1
